@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var {uploadImage} = require('../controllers/image')
+var {uploadImage,deleteImage} = require('../controllers/image')
 var images = require('../helpers/images')
 
 
@@ -11,5 +11,6 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/',images.multer.single('image'),images.sendUploadToGCS,uploadImage)
+router.delete('/:id',deleteImage)
 
 module.exports = router;
