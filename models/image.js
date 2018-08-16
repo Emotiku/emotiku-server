@@ -7,7 +7,8 @@ var imageSchema = new Schema({
         type:Schema.Types.ObjectId
     },
     url:String,
-    emotion:String
+    emotion:String,
+    numberFaces : Number
 }) 
 
 var image = mongoose.model('Image',imageSchema)

@@ -12,7 +12,8 @@ const uploadImage = function (req, res) {
                 Model.create({
                     user: decoded.id,
                     url: req.file.cloudStoragePublicUrl,
-                    emotion: emotion
+                    emotion: emotion.emotion,
+                    numberFaces: emotion.numberFaces
                 }, (err, result) => {
                     if (err) {
                         res.status(500)
