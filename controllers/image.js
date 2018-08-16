@@ -1,9 +1,12 @@
 const Model = require('../models/image')
+const User = require('../models/user')
 const jwt = require('jsonwebtoken')
 require('dotenv').config()
 const {emotionDetect} = require('../helpers/vision')
 
 const uploadImage = function (req, res) {
+    console.log("upload image");
+    
     try {
         const token = req.headers.token
         let decoded = jwt.verify(token, process.env.JWT_KEY)
@@ -12,7 +15,8 @@ const uploadImage = function (req, res) {
                 Model.create({
                     user: decoded.id,
                     url: req.file.cloudStoragePublicUrl,
-                    emotion: emotion
+                    emotion: emotion.emotion,
+                    numberFaces: emotion.numberFaces
                 }, (err, result) => {
                     if (err) {
                         res.status(500)
@@ -43,6 +47,8 @@ const uploadImage = function (req, res) {
 }
 
 const deleteImage = function (req, res) {
+    console.log("delete image");
+    
     Model.remove({
             _id: req.params.id
         })
@@ -59,7 +65,8 @@ const deleteImage = function (req, res) {
 
 }
 
-const getImage = (req, res) => {
+const getCurrentUserImage = (req, res) => {
+    console.log("get current user image");
     try {
         const token = req.headers.token
         let decoded = jwt.verify(token, process.env.JWT_KEY)
@@ -67,6 +74,7 @@ const getImage = (req, res) => {
             user: decoded.id
         }
         Model.find(query)
+            .populate('user')
             .then(img => {
                 res.status(200)
                 res.json({
@@ -89,39 +97,95 @@ const getImage = (req, res) => {
 }
 
 const getImageById = (req, res) => {
-    try {
-        const token = req.headers.token
-        let decoded = jwt.verify(token, process.env.JWT_KEY)
-        let query = {
-            user: decoded.id,
-            _id: req.params.id
-        }
-        Model.find(query)
-            .then(img => {
-                res.status(200)
-                res.json({
-                    message: "successfully get photo",
-                    data: img
-                })
-            })
-            .catch(err => {
-                res.status(500)
-                res.json({
-                    error: 'error getting photo'
-                })
-            })
-    } catch (err) {
-        res.status(400)
-            .json({
-                message: "token invalid"
-            })
+    console.log("get by image id");
+    let query = {
+        _id: req.params.id
     }
+    Model.find(query)
+        .populate('user')
+        .then(img => {
+            res.status(200)
+            res.json({
+                message: "successfully get photo",
+                data: img
+            })
+        })
+        .catch(err => {
+            res.status(500)
+            res.json({
+                error: 'error getting photo'
+            })
+        })
+}
+
+const getImageByUserName = (req, res) => {
+    console.log("get img by user name");
+    let queryUser = {
+        name : new RegExp(req.query.name, 'i')
+    }
+    User.findOne(queryUser)
+        .then(user => {
+            if (user) {
+                let userId = user._id
+                //find image with above user id
+                let queryImg = {
+                    user : userId
+                }
+                Model.find(queryImg)
+                    .populate('user')
+                    .then(img => {
+                        res.status(200)
+                        res.json({
+                            message: "successfully get photo",
+                            data: img
+                        })
+                    })
+                    .catch(err => {
+                        res.status(500)
+                        res.json({
+                            error: 'error getting photo'
+                        })
+                    })
+            } else {
+                res.status(401)
+                res.json({
+                    error: 'user not found'
+                })
+            }
+        })
+        .catch(err => {
+            res.status(500)
+            res.json({
+                error: 'error getting user'
+            })
+        })
+}
+
+const getAllUserImage = (req, res) => {
+    console.log("get all user image");
+    Model.find()
+        .populate('user')
+        .then(img => {
+            res.status(200)
+            res.json({
+                message: "successfully get photos",
+                data: img
+            })
+        })
+        .catch(err => {
+            res.status(500)
+            res.json({
+                error: 'error getting photo'
+            })
+        })
 }
 
 
 module.exports = {
     uploadImage,
     deleteImage,
-    getImage,
-    getImageById
+    getCurrentUserImage,
+    getImageById,
+    getImageByUserName,
+    getAllUserImage
 }

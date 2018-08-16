@@ -25,7 +25,7 @@ const emotionDetect = function (imgURL) {
             emotion = "Surprise"
           }
         })
-        resolve(emotion)
+        resolve({emotion : emotion, numberFaces : numberFaces})
       })
       .catch(err => {
         reject("Unable detect emotion")
